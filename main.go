@@ -138,6 +138,7 @@ const ttyColorReset = "0"
 // Space name
 // Is error
 func prompt(space string, user string, isErr bool, isTTY bool) {
+	fmt.Println()
 	// (user@nebula) [(space)] >
 	if isTTY {
 		fmt.Printf("%s%s%s", ttyColorPrefix, ttyColorBold, ttyColorSuffix)
@@ -190,13 +191,13 @@ func loop(client *Graph.GraphClient, input io.Reader, interactive bool, user str
 			// Exception
 			log.Fatalf("Execute error, %s", err.Error())
 		}
-		// TODO(shylock) hard code error code
-		currentSpace = string(resp.SpaceName)
-		if interactive {
-			prompt(currentSpace, user, resp.GetErrorCode() != 0, isTTY)
-		}
 		printResp(resp)
 		log.Print() // time
+		currentSpace = string(resp.SpaceName)
+		if interactive {
+			// TODO(shylock) hard code error code
+			prompt(currentSpace, user, resp.GetErrorCode() != 0, isTTY)
+		}
 	}
 }
 
