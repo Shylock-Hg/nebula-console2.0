@@ -158,9 +158,9 @@ func printRow(row []string, colSpec TableSpec) {
 	for i, col := range row {
 		// TODO(shylock) hard code the indent 2
 		colString := fmt.Sprintf("|  %s", col)
-		length := uint(len(colString))
-		if length < colSpec[i] {
-			colString = colString + strings.Repeat(" ", int(colSpec[i]-length+align))
+		length := uint(len(col))
+		if length < colSpec[i] + align {
+			colString = colString + strings.Repeat(" ", int(colSpec[i]+align - length))
 		}
 		fmt.Print(colString)
 	}
@@ -186,9 +186,9 @@ func printTable(table *ngdb.DataSet) {
 	}
 
 	// print
-	totalLineLength := sum(tableSpec) + uint(len(tableSpec)*align*2)
-	headerLine := strings.Repeat(headerChar, int(totalLineLength))
-	rowLine := strings.Repeat(rowChar, int(totalLineLength))
+	totalLineLength := int(sum(tableSpec)) + columnSize * (align + 1) + align + 1
+	headerLine := strings.Repeat(headerChar, totalLineLength)
+	rowLine := strings.Repeat(rowChar, totalLineLength)
 	fmt.Println(headerLine)
 	printRow(tableHeader, tableSpec)
 	fmt.Println(headerLine)
