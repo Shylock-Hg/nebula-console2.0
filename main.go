@@ -185,8 +185,8 @@ func printTable(table *ngdb.DataSet) {
 		}
 	}
 
-	// print
-	totalLineLength := int(sum(tableSpec)) + columnSize * (align + 1) + align + 1
+	//                 value limit         + two indent              + '|' itself
+	totalLineLength := int(sum(tableSpec)) + columnSize * align * 2  + columnSize + 1
 	headerLine := strings.Repeat(headerChar, totalLineLength)
 	rowLine := strings.Repeat(rowChar, totalLineLength)
 	fmt.Println(headerLine)
