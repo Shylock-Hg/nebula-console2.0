@@ -177,7 +177,7 @@ func printTable(table *ngdb.DataSet) {
 
 func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
 	// Error
-	if resp.GetErrorCode() != 0 {
+	if resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED {
 		fmt.Printf("[ERROR (%d)]", resp.GetErrorCode())
 		return
 	}
@@ -260,8 +260,7 @@ func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user stri
 		log.Print() // time
 		currentSpace = string(resp.SpaceName)
 		if interactive {
-			// TODO(shylock) hard code error code
-			prompt(currentSpace, user, resp.GetErrorCode() != 0, isTTY)
+			prompt(currentSpace, user, resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED, isTTY)
 		}
 	}
 }
