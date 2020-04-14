@@ -2,7 +2,14 @@
 
 The console for Nebula Graph 2.0
 
+# Usage
+
+Check options for `./nebula-console2.0 -h`, try `./nebula-console2.0` in interactive mode directly.
+And try `./nebula-console2.0 -e 'exit'` for the direct script mode.
+And try `./nebula-console2.0 -f demo.nGQL` for the script file mode.
+
 # TODO
 
 - history
 - autocompletion
+- package to RPM/DEB/DOCKER

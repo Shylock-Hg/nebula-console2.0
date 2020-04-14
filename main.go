@@ -14,8 +14,11 @@ import (
 	"log"
 	"os"
 	"strings"
+	"strconv"
 
-	Graph "github.com/shylock-hg/nebula-go2.0"
+	ngdb "github.com/shylock-hg/nebula-go2.0"
+	common "github.com/shylock-hg/nebula-go2.0/nebula"
+	graph "github.com/shylock-hg/nebula-go2.0/nebula/graph"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -43,8 +46,64 @@ func clientCmd(query string) bool {
 
 // TODO(shylock) package the table visualization to class in sparate file
 
-func val2String(value *Graph.Value) string {
-	return value.String()
+func val2String(value *common.Value) string {
+	if value.IsSetNVal() {  // null
+		switch value.GetNVal() {
+		case common.NullType___NULL__:
+			return "NULL"
+		case common.NullType_NaN:
+			return "NaN"
+		case common.NullType_BAD_DATA:
+			return "BAD_DATA"
+		case common.NullType_BAD_TYPE:
+			return "BAD_TYPE"
+		}
+	} else if value.IsSetBVal() {  // bool
+		return strconv.FormatBool(value.GetBVal())
+	} else if value.IsSetIVal() {  // int64
+		return strconv.FormatInt(value.GetIVal(), 10)
+	} else if value.IsSetFVal() {  // float64
+		return strconv.FormatFloat(value.GetFVal(), 'g', -1, 64)
+	} else if value.IsSetSVal() {  // string
+		return string(value.GetSVal())
+	} else if value.IsSetDVal() {  // yyyy-mm-dd
+		date := value.GetDVal()
+		str := fmt.Sprintf("%d-%d-%d", date.GetYear(), date.GetMonth(), date.GetDay())
+		return str
+	} else if value.IsSetTVal() {  // yyyy-mm-dd HH:MM:SS:MS TZ
+		datetime := value.GetTVal()
+		// TODO(shylock) timezone
+		str := fmt.Sprintf("%d-%d-%d %d:%d:%d:%d",
+			datetime.GetYear(), datetime.GetMonth(), datetime.GetDay(),
+			datetime.GetHour(), datetime.GetMinute(), datetime.GetSec(), datetime.GetMicrosec())
+		return str
+	} else if value.IsSetVVal() {  // Vertex
+		// VId only
+		return string(value.GetVVal().GetVid())
+	} else if value.IsSetEVal() {  // Edge
+		// src-[TypeName]->dst@ranking
+		edge := value.GetEVal()
+		return fmt.Sprintf("%s-[%s]->%s@%d", string(edge.GetSrc()), edge.GetName(), string(edge.GetDst()),
+			edge.GetRanking())
+	} else if value.IsSetPVal() {  // Path
+		// src-[TypeName]->dst@ranking-[TypeName]->dst@ranking ...
+		p := value.GetPVal()
+		str := string(p.GetSrc().GetVid())
+		for _, step := range p.GetSteps() {
+			pStr := fmt.Sprintf("-[%s]->%s@%d", step.GetName(), string(step.GetDst().GetVid()), step.GetRanking())
+			str += pStr
+		}
+		return str
+	}
+	// TODO(shylock)
+	// else if value.IsSetLVal() {  // List
+
+	//} else if value.IsSetMVal() {  // Map
+
+	//} else if value.IsSetUVal() {  // Set
+
+	//}
+	return ""
 }
 
 func max(v1 uint, v2 uint) uint {
@@ -84,7 +143,7 @@ func printRow(row []string, colSpec TableSpec) {
 	fmt.Println("|")
 }
 
-func printTable(table *Graph.DataSet) {
+func printTable(table *ngdb.DataSet) {
 	columnSize := len(table.GetColumnNames())
 	rowSize := len(table.GetRows())
 	tableSpec := make(TableSpec, columnSize)
@@ -115,7 +174,7 @@ func printTable(table *Graph.DataSet) {
 	}
 }
 
-func printResp(resp *Graph.ExecutionResponse) {
+func printResp(resp *graph.ExecutionResponse) {
 	// Error
 	if resp.GetErrorCode() != 0 {
 		fmt.Printf("[ERROR (%d)]", resp.GetErrorCode())
@@ -155,7 +214,7 @@ func prompt(space string, user string, isErr bool, isTTY bool) {
 // Loop the request util fatal or timeout
 // We treat one line as one query
 // Add line break yourself as `SHOW \<CR>HOSTS`
-func loop(client *Graph.GraphClient, input io.Reader, interactive bool, user string) {
+func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user string) {
 	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
 	if interactive {
 		prompt("", user, false, isTTY)
@@ -212,7 +271,7 @@ func main() {
 
 	interactive := *script == "" && *file == ""
 
-	client, err := Graph.NewClient(fmt.Sprintf("%s:%d", *address, *port))
+	client, err := ngdb.NewClient(fmt.Sprintf("%s:%d", *address, *port))
 	if err != nil {
 		log.Fatalf("Fail to create client, address: %s, port: %d, %s", *address, *port, err.Error())
 	}
