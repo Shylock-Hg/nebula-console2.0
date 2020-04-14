@@ -106,12 +106,12 @@ func printTable(table *Graph.DataSet) {
 	totalLineLength := sum(tableSpec) + uint(len(tableSpec)*align*2)
 	headerLine := strings.Repeat(headerChar, int(totalLineLength))
 	rowLine := strings.Repeat(rowChar, int(totalLineLength))
-	fmt.Print(headerLine)
+	fmt.Println(headerLine)
 	printRow(tableHeader, tableSpec)
-	fmt.Print(headerLine)
+	fmt.Println(headerLine)
 	for _, row := range tableRows {
 		printRow(row, tableSpec)
-		fmt.Print(rowLine)
+		fmt.Println(rowLine)
 	}
 }
 
