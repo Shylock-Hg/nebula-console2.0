@@ -15,6 +15,7 @@ import (
 	"os"
 	"strings"
 	"strconv"
+	"time"
 
 	ngdb "github.com/shylock-hg/nebula-go2.0"
 	common "github.com/shylock-hg/nebula-go2.0/nebula"
@@ -174,7 +175,7 @@ func printTable(table *ngdb.DataSet) {
 	}
 }
 
-func printResp(resp *graph.ExecutionResponse) {
+func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
 	// Error
 	if resp.GetErrorCode() != 0 {
 		fmt.Printf("[ERROR (%d)]", resp.GetErrorCode())
@@ -186,6 +187,9 @@ func printResp(resp *graph.ExecutionResponse) {
 			printTable(table)
 		}
 	}
+	// Show time
+	fmt.Printf("time spent %d/%d us", resp.GetLatencyInUs(), duration/*ns*//1000)
+	fmt.Println()
 }
 
 const ttyColorPrefix = "\033["
@@ -245,12 +249,14 @@ func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user stri
 			break
 		}
 
+		start := time.Now()
 		resp, err := client.Execute(lineString)
+		duration := time.Since(start)
 		if err != nil {
 			// Exception
 			log.Fatalf("Execute error, %s", err.Error())
 		}
-		printResp(resp)
+		printResp(resp, duration)
 		log.Print() // time
 		currentSpace = string(resp.SpaceName)
 		if interactive {
