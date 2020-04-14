@@ -95,15 +95,38 @@ func val2String(value *common.Value) string {
 			str += pStr
 		}
 		return str
+	} else if value.IsSetLVal() {  // List
+		// TODO(shylock) optimize the recursive
+		l := value.GetLVal()
+		str := "["
+		for _, v := range l.GetValues() {
+			str += val2String(v)
+			str += ","
+		}
+		str += "]"
+		return str
+	} else if value.IsSetMVal() {  // Map
+		// TODO(shylock) optimize the recursive
+		m := value.GetMVal()
+		str := "{"
+		for k, v := range m.GetKvs() {
+			str += k
+			str += ":"
+			str += val2String(v)
+			str += ","
+		}
+		str += "}"
+		return str
+	} else if value.IsSetUVal() {  // Set
+		// TODO(shylock) optimize the recursive
+		s := value.GetUVal()
+		str := "{"
+		for _, v := range s.GetValues() {
+			str += val2String(v)
+			str += ","
+		}
+		str += "}"
 	}
-	// TODO(shylock)
-	// else if value.IsSetLVal() {  // List
-
-	//} else if value.IsSetMVal() {  // Map
-
-	//} else if value.IsSetUVal() {  // Set
-
-	//}
 	return ""
 }
 
