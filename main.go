@@ -309,8 +309,8 @@ func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user stri
 func main() {
 	address := flag.String("address", "127.0.0.1", "The Nebula Graph IP address")
 	port := flag.Int("port", 3699, "The Nebula Graph Port")
-	username := flag.String("username", "user", "The Nebula Graph login user name")
-	password := flag.String("password", "password", "The Nebula Graph login password")
+	username := flag.String("u", "user", "The Nebula Graph login user name")
+	password := flag.String("p", "password", "The Nebula Graph login password")
 	script := flag.String("e", "", "The nGQL directly")
 	file := flag.String("f", "", "The nGQL script file name")
 	flag.Parse()
