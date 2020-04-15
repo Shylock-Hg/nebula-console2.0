@@ -131,6 +131,7 @@ func val2String(value *common.Value, depth uint) string {
 			str += ","
 		}
 		str += "}"
+		return str
 	}
 	return ""
 }
