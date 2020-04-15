@@ -210,6 +210,7 @@ func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
 	// Error
 	if resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED {
 		fmt.Printf("[ERROR (%d)]", resp.GetErrorCode())
+		fmt.Println()
 		return
 	}
 	// Show tables
