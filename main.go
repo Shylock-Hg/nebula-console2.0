@@ -339,6 +339,7 @@ func main() {
 			log.Fatalf("Open file %s failed, %s", *file, err.Error())
 		}
 		loop(client, fd, interactive, *username)
+		fd.Close()
 	}
 
 	bye(*username, interactive)
