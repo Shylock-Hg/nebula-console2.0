@@ -66,7 +66,7 @@ func val2String(value *common.Value) string {
 	} else if value.IsSetFVal() {  // float64
 		return strconv.FormatFloat(value.GetFVal(), 'g', -1, 64)
 	} else if value.IsSetSVal() {  // string
-		return string(value.GetSVal())
+		return "\"" + string(value.GetSVal()) + "\""
 	} else if value.IsSetDVal() {  // yyyy-mm-dd
 		date := value.GetDVal()
 		str := fmt.Sprintf("%d-%d-%d", date.GetYear(), date.GetMonth(), date.GetDay())
