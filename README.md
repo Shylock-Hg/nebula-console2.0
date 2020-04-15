@@ -13,3 +13,4 @@ And try `./nebula-console2.0 -f demo.nGQL` for the script file mode.
 - history
 - autocompletion
 - package to RPM/DEB/DOCKER
+- batch process to reduce memory consumption and speed up IO
