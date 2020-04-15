@@ -47,7 +47,12 @@ func clientCmd(query string) bool {
 
 // TODO(shylock) package the table visualization to class in sparate file
 
-func val2String(value *common.Value) string {
+func val2String(value *common.Value, depth uint) string {
+	// TODO(shylock) get golang runtime limit
+	if depth > 256 {  // Avoid too deep recursive
+		return ""
+	}
+
 	if value.IsSetNVal() {  // null
 		switch value.GetNVal() {
 		case common.NullType___NULL__:
@@ -100,7 +105,7 @@ func val2String(value *common.Value) string {
 		l := value.GetLVal()
 		str := "["
 		for _, v := range l.GetValues() {
-			str += val2String(v)
+			str += val2String(v, depth + 1)
 			str += ","
 		}
 		str += "]"
@@ -112,7 +117,7 @@ func val2String(value *common.Value) string {
 		for k, v := range m.GetKvs() {
 			str += k
 			str += ":"
-			str += val2String(v)
+			str += val2String(v, depth + 1)
 			str += ","
 		}
 		str += "}"
@@ -122,7 +127,7 @@ func val2String(value *common.Value) string {
 		s := value.GetUVal()
 		str := "{"
 		for _, v := range s.GetValues() {
-			str += val2String(v)
+			str += val2String(v, depth + 1)
 			str += ","
 		}
 		str += "}"
@@ -180,7 +185,7 @@ func printTable(table *ngdb.DataSet) {
 	for i, row := range table.GetRows() {
 		tableRows[i] = make([]string, columnSize)
 		for j, col := range row.GetColumns() {
-			tableRows[i][j] = val2String(col)
+			tableRows[i][j] = val2String(col, 0)
 			tableSpec[j] = max(uint(len(tableRows[i][j])), tableSpec[j])
 		}
 	}
