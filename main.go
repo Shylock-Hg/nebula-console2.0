@@ -26,12 +26,18 @@ import (
 const NebulaLabel = "Nebula-Console"
 const Version = "v2.0.0-alpha"
 
-func welcome() {
+func welcome(interactive bool) {
+	if !interactive {
+		return;
+	}
 	fmt.Printf("Welcome to Nebula Graph %s!", Version)
 	fmt.Println()
 }
 
-func bye(username string) {
+func bye(username string, interactive bool) {
+	if !interactive {
+		return;
+	}
 	fmt.Printf("Bye %s!", username)
 	fmt.Println()
 }
@@ -260,6 +266,10 @@ func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user stri
 		line, _, err := reader.ReadLine()
 		lineString := string(line)
 		if err != nil {
+			if !interactive {
+				// Quit
+				break
+			}
 			log.Printf("Get line failed: ", err.Error())
 			if interactive {
 				prompt(currentSpace, user, true, isTTY)
@@ -316,7 +326,7 @@ func main() {
 		log.Fatalf("Fail to connect server, username: %s, password: %s, %s", *username, *password, err.Error())
 	}
 
-	welcome()
+	welcome(interactive)
 
 	// Loop the request
 	if interactive {
@@ -331,7 +341,7 @@ func main() {
 		loop(client, fd, interactive, *username)
 	}
 
-	bye(*username)
+	bye(*username, interactive)
 
 	client.Disconnect()
 }
