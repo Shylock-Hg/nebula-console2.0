@@ -16,11 +16,12 @@ import (
 	"strings"
 	"strconv"
 	"time"
+	"path"
 
 	ngdb "github.com/shylock-hg/nebula-go2.0"
 	common "github.com/shylock-hg/nebula-go2.0/nebula"
 	graph "github.com/shylock-hg/nebula-go2.0/nebula/graph"
-	"golang.org/x/crypto/ssh/terminal"
+	readline "github.com/shylock-hg/readline"
 )
 
 const NebulaLabel = "Nebula-Console"
@@ -252,42 +253,84 @@ func prompt(space string, user string, isErr bool, isTTY bool) {
 	}
 }
 
+type Cli interface {
+	Prompt(space string, isErr bool)
+	ReadLine() (string, error)
+	Interactive() bool
+}
+
+// interactive
+type iCli struct {
+	input *readline.Instance
+	user string
+	isTTY bool
+}
+
+func NewiCli(i *readline.Instance, user string, isTTY bool) iCli {
+	return iCli{i, user, isTTY}
+}
+
+func (l iCli) Prompt(space string, isErr bool) {
+	prompt(space, l.user, isErr, l.isTTY)
+}
+
+func (l iCli) ReadLine() (string, error) {
+	return l.input.Readline()
+}
+
+func (l iCli) Interactive() bool {
+	return true
+}
+
+// non-interactive
+type nCli struct {
+	input io.Reader
+	user  string
+	io *bufio.Reader
+}
+
+func NewnCli(i io.Reader, user string) nCli {
+	return nCli{i, user, bufio.NewReader(i)}
+}
+
+func (l nCli) Prompt(space string, isErr bool) {
+	// nothing
+}
+
+func (l nCli) ReadLine() (string, error) {
+	s, _, e := l.io.ReadLine()
+	return string(s), e
+}
+
+func (l nCli) Interactive() bool {
+	return false
+}
+
 // Loop the request util fatal or timeout
 // We treat one line as one query
 // Add line break yourself as `SHOW \<CR>HOSTS`
-func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user string) {
-	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
-	if interactive {
-		prompt("", user, false, isTTY)
-	}
-	reader := bufio.NewReader(input)
+func loop(client *ngdb.GraphClient, c Cli) error {
+	c.Prompt("", false)
 	currentSpace := ""
 	for true {
-		line, _, err := reader.ReadLine()
+		line, err := c.ReadLine()
 		lineString := string(line)
 		if err != nil {
-			if !interactive {
-				// Quit
-				break
-			}
 			log.Printf("Get line failed: ", err.Error())
-			if interactive {
-				prompt(currentSpace, user, true, isTTY)
+			if err == io.EOF || err == readline.ErrInterrupt {
+				return nil
 			}
-			continue
+			return err
 		}
 		if len(line) == 0 {
-			// Empty line
-			if interactive {
-				prompt(currentSpace, user, false, isTTY)
-			}
+			c.Prompt(currentSpace, false)
 			continue
 		}
 
 		// Client side command
 		if clientCmd(lineString) {
 			// Quit
-			break
+			return nil
 		}
 
 		start := time.Now()
@@ -300,11 +343,96 @@ func loop(client *ngdb.GraphClient, input io.Reader, interactive bool, user stri
 		printResp(resp, duration)
 		fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 		currentSpace = string(resp.SpaceName)
-		if interactive {
-			prompt(currentSpace, user, resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED, isTTY)
-		}
+		c.Prompt(currentSpace, resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED)
 	}
+	return nil
 }
+
+var completer = readline.NewPrefixCompleter(
+	// show
+	readline.PcItem("SHOW",
+		readline.PcItem("HOSTS"),
+		readline.PcItem("SPACES"),
+		readline.PcItem("PARTS"),
+		readline.PcItem("TAGS"),
+		readline.PcItem("EDGES"),
+		readline.PcItem("USERS"),
+		readline.PcItem("ROLES"),
+		readline.PcItem("USER"),
+		readline.PcItem("CONFIGS"),
+	),
+
+	// describe
+	readline.PcItem("DESCRIBE",
+		readline.PcItem("TAG"),
+		readline.PcItem("EDGE"),
+		readline.PcItem("SPACE"),
+	),
+	readline.PcItem("DESC",
+		readline.PcItem("TAG"),
+		readline.PcItem("EDGE"),
+		readline.PcItem("SPACE"),
+	),
+	// get configs
+	readline.PcItem("GET",
+		readline.PcItem("CONFIGS"),
+	),
+	// create
+	readline.PcItem("CREATE",
+		readline.PcItem("SPACE"),
+		readline.PcItem("TAG"),
+		readline.PcItem("EDGE"),
+		readline.PcItem("USER"),
+	),
+	// drop
+	readline.PcItem("DROP",
+		readline.PcItem("SPACE"),
+		readline.PcItem("TAG"),
+		readline.PcItem("EDGE"),
+		readline.PcItem("USER"),
+	),
+	// alter
+	readline.PcItem("ALTER",
+		readline.PcItem("USER"),
+		readline.PcItem("TAG"),
+		readline.PcItem("EDGE"),
+	),
+
+	// insert
+	readline.PcItem("INSERT",
+		readline.PcItem("VERTEX"),
+		readline.PcItem("EDGE"),
+	),
+	// update
+	readline.PcItem("UPDATE",
+		readline.PcItem("CONFIGS"),
+		readline.PcItem("VERTEX"),
+		readline.PcItem("EDGE"),
+	),
+	// upsert
+	readline.PcItem("UPSERT",
+		readline.PcItem("VERTEX"),
+		readline.PcItem("EDGE"),
+	),
+	// delete
+	readline.PcItem("DELETE",
+		readline.PcItem("VERTEX"),
+		readline.PcItem("EDGE"),
+	),
+
+	// grant
+	readline.PcItem("GRANT",
+		readline.PcItem("ROLE"),
+	),
+	// revoke
+	readline.PcItem("REVOKE",
+		readline.PcItem("ROLE"),
+	),
+	// change password
+	readline.PcItem("CHANGE",
+		readline.PcItem("PASSWORD"),
+	),
+)
 
 func main() {
 	address := flag.String("address", "127.0.0.1", "The Nebula Graph IP address")
@@ -316,6 +444,11 @@ func main() {
 	flag.Parse()
 
 	interactive := *script == "" && *file == ""
+
+	historyHome := os.Getenv("HOME")
+	if historyHome == "" {
+		historyHome = "/tmp"
+	}
 
 	client, err := ngdb.NewClient(fmt.Sprintf("%s:%d", *address, *port))
 	if err != nil {
@@ -329,20 +462,41 @@ func main() {
 	welcome(interactive)
 
 	// Loop the request
+	var exit error = nil
 	if interactive {
-		loop(client, os.Stdin, interactive, *username)
+		r, err := readline.NewEx(&readline.Config{
+				// TODO(shylock) prompt the space and error color
+				Prompt:          "nebula> ",
+				HistoryFile:     path.Join(historyHome, ".nebula_history"),
+				AutoComplete:    completer,
+				InterruptPrompt: "^C",
+				EOFPrompt:       "",
+				HistorySearchFold:   true,
+				FuncFilterInputRune: nil,
+			})
+		if err != nil {
+			log.Fatalf("Create readline failed, %s.", err.Error())
+		}
+
+		isTTY := readline.IsTerminal(int(os.Stdout.Fd()))
+
+		exit = loop(client, NewiCli(r, *username, isTTY))
 	} else if *script != "" {
-		loop(client, strings.NewReader(*script), interactive, *username)
+		exit = loop(client, NewnCli(strings.NewReader(*script), *username))
 	} else if *file != "" {
 		fd, err := os.Open(*file)
 		if err != nil {
 			log.Fatalf("Open file %s failed, %s", *file, err.Error())
 		}
-		loop(client, fd, interactive, *username)
+		exit = loop(client, NewnCli(fd, *username))
 		fd.Close()
 	}
 
 	bye(*username, interactive)
 
 	client.Disconnect()
+
+	if exit != nil {
+		os.Exit(1)
+	}
 }
