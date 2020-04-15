@@ -202,6 +202,8 @@ func printTable(table *ngdb.DataSet) {
 		printRow(row, tableSpec)
 		fmt.Println(rowLine)
 	}
+	fmt.Printf("Got %d rows, %d columns.", rowSize, columnSize)
+	fmt.Println()
 }
 
 func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
