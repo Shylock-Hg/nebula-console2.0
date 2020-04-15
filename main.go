@@ -49,7 +49,7 @@ func clientCmd(query string) bool {
 
 func val2String(value *common.Value, depth uint) string {
 	// TODO(shylock) get golang runtime limit
-	if depth > 256 {  // Avoid too deep recursive
+	if depth == 0 {  // Avoid too deep recursive
 		return ""
 	}
 
@@ -105,7 +105,7 @@ func val2String(value *common.Value, depth uint) string {
 		l := value.GetLVal()
 		str := "["
 		for _, v := range l.GetValues() {
-			str += val2String(v, depth + 1)
+			str += val2String(v, depth - 1)
 			str += ","
 		}
 		str += "]"
@@ -117,7 +117,7 @@ func val2String(value *common.Value, depth uint) string {
 		for k, v := range m.GetKvs() {
 			str += k
 			str += ":"
-			str += val2String(v, depth + 1)
+			str += val2String(v, depth - 1)
 			str += ","
 		}
 		str += "}"
@@ -127,7 +127,7 @@ func val2String(value *common.Value, depth uint) string {
 		s := value.GetUVal()
 		str := "{"
 		for _, v := range s.GetValues() {
-			str += val2String(v, depth + 1)
+			str += val2String(v, depth - 1)
 			str += ","
 		}
 		str += "}"
@@ -186,7 +186,7 @@ func printTable(table *ngdb.DataSet) {
 	for i, row := range table.GetRows() {
 		tableRows[i] = make([]string, columnSize)
 		for j, col := range row.GetColumns() {
-			tableRows[i][j] = val2String(col, 0)
+			tableRows[i][j] = val2String(col, 256)
 			tableSpec[j] = max(uint(len(tableRows[i][j])), tableSpec[j])
 		}
 	}
