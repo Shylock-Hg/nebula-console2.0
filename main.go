@@ -162,8 +162,7 @@ const colDelimiter = "|" // Column delemiter
 
 func printRow(row []string, colSpec TableSpec) {
 	for i, col := range row {
-		// TODO(shylock) hard code the indent 2
-		colString := fmt.Sprintf("|  %s", col)
+		colString := "|" + strings.Repeat(" ", align) + col;
 		length := uint(len(col))
 		if length < colSpec[i] + align {
 			colString = colString + strings.Repeat(" ", int(colSpec[i]+align - length))
