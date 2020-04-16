@@ -461,6 +461,9 @@ func main() {
 
 	welcome(interactive)
 
+	defer bye(*username, interactive)
+	defer client.Disconnect()
+
 	// Loop the request
 	var exit error = nil
 	if interactive {
@@ -491,10 +494,6 @@ func main() {
 		exit = loop(client, NewnCli(fd, *username))
 		fd.Close()
 	}
-
-	bye(*username, interactive)
-
-	client.Disconnect()
 
 	if exit != nil {
 		os.Exit(1)
