@@ -137,6 +137,7 @@ type iCli struct {
 func NewiCli(home string, user string) iCli {
 	r, err := readline.NewEx(&readline.Config{
 			// TODO(shylock) prompt the space and error color
+			// See https://github.com/chzyer/readline/issues/169
 			Prompt:          "nebula> ",
 			HistoryFile:     path.Join(home, ".nebula_history"),
 			AutoComplete:    completer,
