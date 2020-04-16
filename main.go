@@ -71,8 +71,8 @@ func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
 // We treat one line as one query
 // Add line break yourself as `SHOW \<CR>HOSTS`
 func loop(client *ngdb.GraphClient, c Cli) error {
-	c.Prompt("", false)
 	currentSpace := ""
+	c.Prompt(currentSpace, false)
 	for true {
 		line, err, exit := c.ReadLine()
 		lineString := string(line)
