@@ -45,8 +45,8 @@ func bye(username string, interactive bool) {
 
 // return , does exit
 func clientCmd(query string) bool {
-	// TODO(shylock) handle blank
-	if query == "exit" || query == "quit" {
+	plain := strings.ToLower(strings.TrimSpace(query))
+	if plain == "exit" || plain == "quit" {
 		return true
 	}
 	return false
