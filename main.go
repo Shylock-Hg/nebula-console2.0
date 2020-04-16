@@ -57,7 +57,7 @@ func clientCmd(query string) bool {
 func val2String(value *common.Value, depth uint) string {
 	// TODO(shylock) get golang runtime limit
 	if depth == 0 {  // Avoid too deep recursive
-		return ""
+		return "..."
 	}
 
 	if value.IsSetNVal() {  // null
