@@ -189,7 +189,13 @@ func (l nCli) Prompt(space string, isErr bool) {
 
 func (l nCli) ReadLine() (string, error, bool) {
 	s, _, e := l.io.ReadLine()
-	return string(s), e, e != nil
+	if e == io.EOF {
+		return string(s), nil, true
+	}
+	if e != nil {
+		return string(s), e, true
+	}
+	return string(s), e, false
 }
 
 func (l nCli) Interactive() bool {
