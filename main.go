@@ -77,7 +77,6 @@ func loop(client *ngdb.GraphClient, c Cli) error {
 		line, err, exit := c.ReadLine()
 		lineString := string(line)
 		if  exit {
-			log.Printf("Get line failed: ", err.Error())
 			return err
 		}
 		if len(line) == 0 {
