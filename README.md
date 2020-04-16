@@ -2,6 +2,10 @@
 
 The console for Nebula Graph 2.0
 
+# Build
+
+Install golang by https://golang.org/doc/install, then try `go build`
+
 # Usage
 
 Check options for `./nebula-console2.0 -h`, try `./nebula-console2.0` in interactive mode directly.
