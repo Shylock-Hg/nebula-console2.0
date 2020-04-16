@@ -41,7 +41,7 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
       - name: test
-        if: matrix.os == 'linux' && matrix.arch == amd64
+        if: matrix.os == 'linux' && matrix.arch == 'amd64'
         run: |
           -set e
           ./nebula-console2.0 -e 'exit'
