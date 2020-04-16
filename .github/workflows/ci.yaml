@@ -43,6 +43,6 @@ jobs:
       - name: test
         if: matrix.os == 'linux' && matrix.arch == 'amd64'
         run: |
-          -set e
+          set -e
           ./nebula-console2.0 -e 'exit'
           ./nebula-console2.0 -f demo.nGQL
