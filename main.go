@@ -122,7 +122,7 @@ func val2String(value *common.Value, depth uint) string {
 		m := value.GetMVal()
 		str := "{"
 		for k, v := range m.GetKvs() {
-			str += k
+			str += "\"" + k + "\""
 			str += ":"
 			str += val2String(v, depth - 1)
 			str += ","
