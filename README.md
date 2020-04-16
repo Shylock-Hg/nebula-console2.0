@@ -17,6 +17,7 @@ And try `./nebula-console2.0 -f demo.nGQL` for the script file mode.
 - Interactive and non-interactive
 - History
 - Autocompletion
+- Multiple OS and arch supported (linux/amd64 recommend)
 
 # TODO
 
