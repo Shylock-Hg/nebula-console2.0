@@ -138,7 +138,6 @@ func main() {
 	// Loop the request
 	var exit error = nil
 	if interactive {
-
 		exit = loop(client, NewiCli(historyHome, *username))
 	} else if *script != "" {
 		exit = loop(client, NewnCli(strings.NewReader(*script), *username))
