@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"path/filepath"
 
 	ngdb "github.com/shylock-hg/nebula-go2.0"
 	graph "github.com/shylock-hg/nebula-go2.0/nebula/graph"
@@ -118,7 +119,11 @@ func main() {
 
 	historyHome := os.Getenv("HOME")
 	if historyHome == "" {
-		historyHome = "/tmp"
+		ex, err := os.Executable()
+		if err != nil {
+			log.Fatalf("Get executable failed: %s", err.Error())
+		}
+		historyHome = filepath.Dir(ex)  // Set to executable folder
 	}
 
 	client, err := ngdb.NewClient(fmt.Sprintf("%s:%d", *address, *port))
