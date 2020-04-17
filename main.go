@@ -71,8 +71,6 @@ func printResp(resp *graph.ExecutionResponse, duration time.Duration) {
 // We treat one line as one query
 // Add line break yourself as `SHOW \<CR>HOSTS`
 func loop(client *ngdb.GraphClient, c Cli) error {
-	currentSpace := ""
-	c.Prompt(currentSpace, false)
 	for true {
 		line, err, exit := c.ReadLine()
 		lineString := string(line)
@@ -80,7 +78,7 @@ func loop(client *ngdb.GraphClient, c Cli) error {
 			return err
 		}
 		if len(line) == 0 {
-			c.Prompt(currentSpace, false)
+			fmt.Println()
 			continue
 		}
 
@@ -99,8 +97,9 @@ func loop(client *ngdb.GraphClient, c Cli) error {
 		}
 		printResp(resp, duration)
 		fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
-		currentSpace = string(resp.SpaceName)
-		c.Prompt(currentSpace, resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED)
+		c.SetSpace(string(resp.SpaceName))
+		c.SetisErr(resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED)
+		fmt.Println()
 	}
 	return nil
 }

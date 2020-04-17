@@ -103,42 +103,49 @@ var completer = readline.NewPrefixCompleter(
 	),
 )
 
+func promptString(space string, user string, isErr bool, isTTY bool) string {
+	prompt := ""
+	// (user@nebula) [(space)] >
+	if isTTY {
+		prompt += fmt.Sprintf("%s%s%s", ttyColorPrefix, ttyColorBold, ttyColorSuffix)
+	}
+	if isTTY && isErr {
+		prompt += fmt.Sprintf("%s%s%s", ttyColorPrefix, ttyColorRed, ttyColorSuffix)
+	}
+	prompt += fmt.Sprintf("(%s@%s) [(%s)]> ", user, NebulaLabel, space)
+	if isTTY {
+		prompt += fmt.Sprintf("%s%s%s", ttyColorPrefix, ttyColorReset, ttyColorSuffix)
+	}
+	return prompt
+}
 
 // Space name
 // Is error
 func prompt(space string, user string, isErr bool, isTTY bool) {
-	fmt.Println()
-	// (user@nebula) [(space)] >
-	if isTTY {
-		fmt.Printf("%s%s%s", ttyColorPrefix, ttyColorBold, ttyColorSuffix)
-	}
-	if isTTY && isErr {
-		fmt.Printf("%s%s%s", ttyColorPrefix, ttyColorRed, ttyColorSuffix)
-	}
-	fmt.Printf("(%s@%s) [(%s)]> ", user, NebulaLabel, space)
-	if isTTY {
-		fmt.Printf("%s%s%s", ttyColorPrefix, ttyColorReset, ttyColorSuffix)
-	}
+	fmt.Print(promptString(space, user, isErr, isTTY))
 }
 
 type Cli interface {
 	Prompt(space string, isErr bool)
 	ReadLine() (/*line*/ string, /*err*/ error, /*exit*/ bool)
 	Interactive() bool
+	SetisErr(bool)
+	SetSpace(string)
 }
 
 // interactive
 type iCli struct {
 	input *readline.Instance
 	user string
+	space string
+	isErr bool
 	isTTY bool
 }
 
-func NewiCli(home string, user string) iCli {
+func NewiCli(home string, user string) *iCli {
 	r, err := readline.NewEx(&readline.Config{
-			// TODO(shylock) prompt the space and error color
 			// See https://github.com/chzyer/readline/issues/169
-			Prompt:          "nebula> ",
+			Prompt:          nil,
 			HistoryFile:     path.Join(home, ".nebula_history"),
 			AutoComplete:    completer,
 			InterruptPrompt: "^C",
@@ -150,11 +157,23 @@ func NewiCli(home string, user string) iCli {
 		log.Fatalf("Create readline failed, %s.", err.Error())
 	}
 	isTTY := readline.IsTerminal(int(os.Stdout.Fd()))
-	return iCli{r, user, isTTY}
+	icli := &iCli{r, user, "", false,isTTY}
+	icli.input.SetPrompt(func() []rune {
+		return []rune(promptString(icli.space, icli.user, icli.isErr, icli.isTTY))
+	})
+	return icli
+}
+
+func (l *iCli) SetSpace(space string) {
+	l.space = space
+}
+
+func (l *iCli) SetisErr(isErr bool) {
+	l.isErr = isErr
 }
 
 func (l iCli) Prompt(space string, isErr bool) {
-	prompt(space, l.user, isErr, l.isTTY)
+	// nothing
 }
 
 func (l iCli) ReadLine() (string, error, bool) {
@@ -201,4 +220,12 @@ func (l nCli) ReadLine() (string, error, bool) {
 
 func (l nCli) Interactive() bool {
 	return false
+}
+
+func (l nCli) SetSpace(space string) {
+	// nothing
+}
+
+func (l nCli) SetisErr(isErr bool) {
+	// nothing
 }
