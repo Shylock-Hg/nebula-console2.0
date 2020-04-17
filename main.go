@@ -143,13 +143,13 @@ func main() {
 	if interactive {
 		exit = loop(client, NewiCli(historyHome, *username))
 	} else if *script != "" {
-		exit = loop(client, NewnCli(strings.NewReader(*script), *username))
+		exit = loop(client, NewnCli(strings.NewReader(*script)))
 	} else if *file != "" {
 		fd, err := os.Open(*file)
 		if err != nil {
 			log.Fatalf("Open file %s failed, %s", *file, err.Error())
 		}
-		exit = loop(client, NewnCli(fd, *username))
+		exit = loop(client, NewnCli(fd))
 		fd.Close()
 	}
 

@@ -119,14 +119,7 @@ func promptString(space string, user string, isErr bool, isTTY bool) string {
 	return prompt
 }
 
-// Space name
-// Is error
-func prompt(space string, user string, isErr bool, isTTY bool) {
-	fmt.Print(promptString(space, user, isErr, isTTY))
-}
-
 type Cli interface {
-	Prompt(space string, isErr bool)
 	ReadLine() (/*line*/ string, /*err*/ error, /*exit*/ bool)
 	Interactive() bool
 	SetisErr(bool)
@@ -172,10 +165,6 @@ func (l *iCli) SetisErr(isErr bool) {
 	l.isErr = isErr
 }
 
-func (l iCli) Prompt(space string, isErr bool) {
-	// nothing
-}
-
 func (l iCli) ReadLine() (string, error, bool) {
 	get, err := l.input.Readline()
 	if err == io.EOF || err == readline.ErrInterrupt {
@@ -194,17 +183,11 @@ func (l iCli) Interactive() bool {
 
 // non-interactive
 type nCli struct {
-	input io.Reader
-	user  string
 	io *bufio.Reader
 }
 
-func NewnCli(i io.Reader, user string) nCli {
-	return nCli{i, user, bufio.NewReader(i)}
-}
-
-func (l nCli) Prompt(space string, isErr bool) {
-	// nothing
+func NewnCli(i io.Reader) nCli {
+	return nCli{bufio.NewReader(i)}
 }
 
 func (l nCli) ReadLine() (string, error, bool) {
